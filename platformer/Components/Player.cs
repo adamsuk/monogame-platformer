@@ -18,16 +18,17 @@ namespace platformer
 
         // variable
         bool onFloor;
+        int jumpCount;
         int prevFloorContact;
         float ballRotation;
         Vector2 ballPosition;
         Vector2 ballVelocity;
+        KeyboardState oldKeyState;
 
         // sprites
         Texture2D ballTexture;
 
         private readonly Game _game;
-        private SpriteBatch _spriteBatch;
         private readonly GraphicsDeviceManager _graphics;
 
         public Player(Game game, GraphicsDeviceManager graphics, Vector2 ballPosition)
@@ -38,12 +39,13 @@ namespace platformer
             // game constants and variables
             this.pixelToMeter = 200f;
             this.ballMass = 1f;
-            this.userForce = 400f;
+            this.userForce = 300f;
             this.bounceFactor = 0.5f;
             this.frictionCoefficient = 0.05f;
-            this.maxSpeed = 10f * pixelToMeter;
+            this.maxSpeed = 100f * pixelToMeter;
             this.gravity = -9.81f * pixelToMeter;
             this.onFloor = false;
+            this.jumpCount = 0;
             this.prevFloorContact = 0;
             this.ballRotation = 0f;
             this.ballVelocity = Vector2.Zero;
@@ -59,20 +61,23 @@ namespace platformer
         public void Update(GameTime gameTime)
         {
             // TODO: Add your update logic here
-            var kstate = Keyboard.GetState();
+            var keyState = Keyboard.GetState();
 
             // user actions
-            if (kstate.IsKeyDown(Keys.Up) && onFloor)
+            if (keyState.IsKeyDown(Keys.Up) && oldKeyState.IsKeyUp(Keys.Up) && (onFloor || jumpCount <= 1))
             {
                 prevFloorContact = 0;
+                jumpCount += 1;
                 ballVelocity.Y -= ((userForce / ballMass) * pixelToMeter) * (float)gameTime.ElapsedGameTime.TotalSeconds;
             }
 
-            if (kstate.IsKeyDown(Keys.Left))
+            if (keyState.IsKeyDown(Keys.Left))
                 ballVelocity.X -= (userForce / ballMass) * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            if (kstate.IsKeyDown(Keys.Right))
+            if (keyState.IsKeyDown(Keys.Right))
                 ballVelocity.X += (userForce / ballMass) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            oldKeyState = keyState;
 
             // limit velocity to maxSpeed
             if (ballVelocity.X < -maxSpeed || ballVelocity.X > maxSpeed)
@@ -114,14 +119,7 @@ namespace platformer
             ballPosition.Y += ballVelocity.Y * (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             // calc rotation
-            if (ballVelocity.X != 0)
-            {
-                ballRotation += 1f * (ballVelocity.X / maxSpeed);
-            }
-            else
-            {
-                ballRotation = 0f;
-            }
+            ballRotation += 10f * (ballVelocity.X / maxSpeed);
 
             // boundaries
             if (ballPosition.X > _graphics.PreferredBackBufferWidth - ballTexture.Width / 2)
@@ -137,6 +135,7 @@ namespace platformer
             {
                 prevFloorContact += 1;
                 onFloor = true;
+                jumpCount = 0;
                 ballVelocity.Y = 0;
                 ballPosition.Y = _graphics.PreferredBackBufferHeight - ballTexture.Height / 2;
             }
