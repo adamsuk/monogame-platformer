@@ -16,9 +16,11 @@ namespace platformer
         float pixelToMeter;
         float frictionCoefficient;
         float maxSpeed;
+        float bounceFactor; // how much of the initial force is maintained in the follow-up bounce
 
         // variable
         bool onFloor;
+        int prevFloorContact;
         float ballRotation;
         Vector2 ballPosition;
         Vector2 ballVelocity;
@@ -45,10 +47,12 @@ namespace platformer
             pixelToMeter = 200f;
             ballMass = 1f;
             userForce = 400f;
+            bounceFactor = 0.5f;
             frictionCoefficient = 0.05f;
             maxSpeed = 10f * pixelToMeter;
             gravity = -9.81f * pixelToMeter;
             onFloor = false;
+            prevFloorContact = 0;
             ballRotation = 0f;
             ballVelocity = Vector2.Zero;
             ballPosition = new Vector2(_graphics.PreferredBackBufferWidth / 2, _graphics.PreferredBackBufferHeight / 2);
@@ -88,7 +92,10 @@ namespace platformer
 
             // user actions
             if (kstate.IsKeyDown(Keys.Up) && onFloor)
+            {
+                prevFloorContact = 0;
                 ballVelocity.Y -= ((userForce / ballMass) * pixelToMeter) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
 
             if (kstate.IsKeyDown(Keys.Left))
                 ballVelocity.X -= (userForce / ballMass) * (float)gameTime.ElapsedGameTime.TotalSeconds;
@@ -114,6 +121,21 @@ namespace platformer
             else
             {
                 ballVelocity.X = ballVelocity.X * (1 - frictionCoefficient);
+                // bouce - floor
+                if (prevFloorContact != 0)
+                {
+                    ballVelocity.Y -= (userForce / ballMass) * pixelToMeter * (float)Math.Pow(bounceFactor, prevFloorContact) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                }
+            }
+
+            // bounce - x boundaries
+            if (ballPosition.X >= _graphics.PreferredBackBufferWidth - ballTexture.Width / 2)
+            {
+                ballVelocity.X = -1 * (userForce / ballMass) * pixelToMeter * bounceFactor * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            }
+            else if (ballPosition.X <= ballTexture.Width / 2)
+            {
+                ballVelocity.X = (userForce / ballMass) * pixelToMeter * bounceFactor * (float)gameTime.ElapsedGameTime.TotalSeconds;
             }
 
             // calc positions
@@ -133,24 +155,22 @@ namespace platformer
             // boundaries
             if (ballPosition.X > _graphics.PreferredBackBufferWidth - ballTexture.Width / 2)
             {
-                ballVelocity.X = 0;
                 ballPosition.X = _graphics.PreferredBackBufferWidth - ballTexture.Width / 2;
             }
             else if (ballPosition.X < ballTexture.Width / 2)
             {
-                ballVelocity.X = 0;
                 ballPosition.X = ballTexture.Width / 2;
             }
 
             if (ballPosition.Y > _graphics.PreferredBackBufferHeight - ballTexture.Height / 2)
             {
+                prevFloorContact += 1;
                 onFloor = true;
                 ballVelocity.Y = 0;
                 ballPosition.Y = _graphics.PreferredBackBufferHeight - ballTexture.Height / 2;
             }
             else if (ballPosition.Y <= ballTexture.Height / 2)
             {
-                onFloor = true;
                 ballVelocity.Y = 0;
                 ballPosition.Y = ballTexture.Height / 2;
             }

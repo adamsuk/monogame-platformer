@@ -9,8 +9,9 @@ This repo contains a simple MonoGame platformer. This is my first MonoGame so I'
 - Jump has gravity resistance
 - Rolling on floor has friction
 - Boundaries set to window size
+- Bounce factor added to ball on floor and boundaries
 
-[![current progress](https://cdn.loom.com/sessions/thumbnails/eb2cc475cd724d3389dece622066fe27-1651057828396-with-play.gif)](https://www.loom.com/share/eb2cc475cd724d3389dece622066fe27)
+[![current progress](https://cdn.loom.com/sessions/thumbnails/b211ff372ede4743bdf90e7e9a901ac7-1651067878918.gif)](https://www.loom.com/share/b211ff372ede4743bdf90e7e9a901ac7)
 
 ### Useful links
 
